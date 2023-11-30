@@ -37,39 +37,97 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
 
     var selectedDate: Date?
     
-    
+    let indexOffset = 0  // You may need to adjust the value based on your requirements
+
+    var lastSelectedOption: String?
+
     let options = ["라면타임 & 조식류", "단품코너", "오늘의 백반", "교직원 식당"]
-        
+    func getMenuIndexForWeekday(_ weekday: Int) -> Int {
+        // Adjust the logic here based on your requirements
+        // This is just a placeholder implementation
+        return weekday - 2
+    }
     
     func displayTextForSelectedOption(_ selectedOption: String) {
         var textToDisplay: String
         
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: selectedDate!)
+        let menuIndex = getMenuIndexForWeekday(weekday) + indexOffset
+        
+        guard let unwrappedDate = selectedDate else {
+            // Handle the case when 'selectedDate' is nil
+            // For example, print an error message or provide a default value.
+            print("Error: selectedDate is nil.")
+            return
+        }
         switch selectedOption {
         case "라면타임 & 조식류":
             textToDisplay = "1"
+            fetchingJsonArray2()
             // Show student menu for 라면타임 & 조식류
-            if jsonArray_stu.count > 0 {
-                if let firstRowText = jsonArray_stu[0]["text"] {
-                    textView.text = firstRowText
+            if weekday == 1 || weekday == 7 {
+                // If it's a weekend, display a specific message
+                textView.text = "주말에는 학식을 운영하지 않습니다 :)"
+            } else if weekday >= 2 && weekday <= 6 {
+                // For weekdays (Monday to Friday), display the regular schedule
+                let index = weekday - 2
+                if index < jsonArray_fac.count {
+                    textView.text = jsonArray_fac[index]["text"]
                 } else {
-                    textView.text = "No student content available."
+                    textView.text = "학식을 운영하지 않습니다."
                 }
-            } else {
-                textView.text = "No student content available."
             }
         case "단품코너":
             textToDisplay = "2"
+            fetchingJsonArray2()
+            if weekday == 1 || weekday == 7 {
+                // If it's a weekend, display a specific message
+                textView.text = "주말에는 학식을 운영하지 않습니다 :)"
+            } else if weekday >= 2 && weekday <= 6 {
+                // For weekdays (Monday to Friday), display the regular schedule
+                let index = weekday + 3
+                if index < jsonArray_fac.count {
+                    textView.text = jsonArray_fac[index]["text"]
+                } else {
+                    textView.text = "학식을 운영하지 않습니다."
+                }
+            }
             // Handle other options as needed
         case "오늘의 백반":
             textToDisplay = "3"
-            // Handle other options as needed
+            fetchingJsonArray2()
+            if weekday == 1 || weekday == 7 {
+                // If it's a weekend, display a specific message
+                textView.text = "주말에는 학식을 운영하지 않습니다 :)"
+            } else if weekday >= 2 && weekday <= 6 {
+                // For weekdays (Monday to Friday), display the regular schedule
+                let index = weekday + 8
+                if index < jsonArray_fac.count {
+                    textView.text = jsonArray_fac[index]["text"]
+                } else {
+                    textView.text = "학식을 운영하지 않습니다."
+                }
+            }
         case "교직원 식당":
             textToDisplay = "4"
-            // Handle other options as needed
+            fetchingJsonArray()
+            if weekday == 1 || weekday == 7 {
+                // If it's a weekend, display a specific message
+                textView.text = "주말에는 학식을 운영하지 않습니다 :)"
+            } else if weekday >= 2 && weekday <= 6 {
+                // For weekdays (Monday to Friday), display the regular schedule
+                let index = weekday - 2
+                if index < jsonArray_fac.count {
+                    textView.text = jsonArray_fac[index]["text"]
+                } else {
+                    textView.text = "학식을 운영하지 않습니다."
+                }
+            }
         default:
             textToDisplay = "Unknown Option"
+            textView.text = "Invalid option selected."
         }
-        
         print("Selected Option: \(textToDisplay)")
     }
     
@@ -115,7 +173,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         selectedDate = currentDate
         
         // Load JSON data from the app bundle
-        if let path = Bundle.main.path(forResource: "output_교직원", ofType: "json") {
+        if let path = Bundle.main.path(forResource: "menu_student", ofType: "json") {
             do {
                 let jsonData = try Data(contentsOf: URL(fileURLWithPath: path))
                 if let parsedArray = try JSONSerialization.jsonObject(with: jsonData, options: []) as? [[String: String]] {
@@ -147,6 +205,19 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         }
     }
     
+    func fetchingJsonArray2() {
+        guard let fileLocation = Bundle.main.url(forResource: "menu_student", withExtension: "json") else {
+            return
+        }
+        do {
+            let data = try Data(contentsOf: fileLocation)
+            let result = try JSONDecoder().decode([StudentArrayMenu].self, from: data)
+            self.model_student = result
+            jsonArray_stu = model_student.map { ["text": $0.text] }
+        } catch {
+            print("Parsing Error: \(error)")
+        }
+    }
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
         return 1
     }
@@ -184,5 +255,30 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     @IBAction func datePickerValueChanged(_ sender: UIDatePicker) {
         // Update the selectedDate when the date picker value changes
         selectedDate = sender.date
+        
+        // Get the selected day of the week
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: selectedDate!)
+
+        // Determine the selected option based on the day of the week
+        var selectedOption: String
+        switch weekday {
+        case 2...6: // Monday to Friday
+            selectedOption = "라면타임 & 조식류"
+        case 1, 7: // Sunday or Saturday
+            selectedOption = "주말에는 학식을 운영하지 않습니다 :)"
+        default:
+            selectedOption = "Unknown Option"
+        }
+
+        // Update the menu based on the selected option
+        if let lastOption = lastSelectedOption, lastOption != selectedOption {
+            // If the option has changed, update the menu
+            displayTextForSelectedOption(selectedOption)
+            lastSelectedOption = selectedOption
+        } else {
+            // If the option is the same as the last one, do nothing (optional)
+        }
     }
+
 }
