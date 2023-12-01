@@ -25,9 +25,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     
     
     @IBOutlet var todayDate: UILabel!
-    
-    //    @IBOutlet var facultyBtn: UIButton!
-    
+
     
     @IBOutlet var imgView: UIImageView!
     // 교직원 식당 json파싱을 위한 코드
@@ -71,13 +69,54 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
             } else {
                 textView.text = "주말에는 교직원 식당을 운영하지 않습니다."
             }
+        case "라면타임 & 조식류":
+            if weekday >= 2 && weekday <= 6{
+                let index = getMenuIndexForWeekday(weekday) + indexOffset
+                if index < jsonArray_stu.count{
+                    textView.text = jsonArray_stu[index]["text"]
+                } else{
+                    textView.text = "학식을 ! 운영하지 않습니다."
+                }
+            }else{
+                textView.text = "주말에는 라면타임 & 조식류를 운영하지 않습니다."
+            }
+        case "단품코너":
+            if weekday >= 2 && weekday <= 6 {
+                let index = getIndexForWeekday(weekday)
+                if index - 1 < jsonArray_stu.count {
+                    textView.text = jsonArray_stu[index - 1]["text"]
+                } else {
+                    textView.text = "학식을 !! 운영하지 않습니다."
+                }
+            } else {
+                textView.text = "주말에는 단품코너를 운영하지 않습니다."
+            }
+        case "오늘의 백반":
+            print("Selected Option: \(selectedOption), Weekday: \(weekday)")
+
+            if weekday == 6 {
+                textView.text = "단품 코너를 이용해주세요."
+            } else if weekday == 7 {
+                textView.text = "주말에는 학식을 운영하지 않습니다."
+            } else {
+                let index = getIndexForTodaySpecial(weekday)
+                print("Weekday: \(weekday), Index for Today Special: \(index)")
+                if index - 1 < jsonArray_stu.count {
+                    textView.text = jsonArray_stu[index - 1]["text"]
+                } else {
+                    textView.text = "학식을 ! 운영하지 않습니다."
+                }
+            }
+
+
+            
         default:
             if weekday >= 2 && weekday <= 6 {
                 let index = getMenuIndexForWeekday(weekday) + indexOffset
                 if index < jsonArray_fac.count {
                     textView.text = jsonArray_fac[index]["text"]
                 } else {
-                    textView.text = "학식을@ 운영하지 않습니다."
+                    textView.text = "학식을ㅋㅋ 운영하지 않습니다."
                 }
             } else {
                 print("주말에는 해당 옵션을 이용할 수 없습니다.")
@@ -85,10 +124,24 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         }
     }
 
+    
+    func getIndexForWeekday(_ weekday: Int) -> Int {
+        // Ensure that the adjusted index is within the range [6, 10]
+        return max(min(weekday + 4, 10), 6)
+    }
+    func getIndexForTodaySpecial(_ weekday: Int) -> Int {
+        // Adjust the index offset based on your requirements
+        let adjustedIndex = getMenuIndexForWeekday(weekday) + indexOffset
+        
+        // Ensure that the adjusted index is within the range [11, 14] for "오늘의 백반"
+        let todaySpecialIndex = adjustedIndex + 10 // Add 10 to get the correct range [11, 14]
+        return max(min(weekday + 9, 14), 11)
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
 
         fetchingJsonArray()
+        fetchingJsonArray_student()
         imgView.image = UIImage(named: "수뭉.png")
 
         let currentDate = Date()
@@ -126,6 +179,20 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
             let result = try JSONDecoder().decode([FacultyArrayMenu].self, from: data)
             self.model = result
             jsonArray_fac = model.map { ["text": $0.text] }
+        } catch {
+            print("Parsing Error: \(error)")
+        }
+    }
+
+    func fetchingJsonArray_student() {
+        guard let fileLocation = Bundle.main.url(forResource: "menu_student", withExtension: "json") else {
+            return
+        }
+        do {
+            let data = try Data(contentsOf: fileLocation)
+            let result = try JSONDecoder().decode([StudentArrayMenu].self, from: data)
+            self.model_student = result
+            jsonArray_stu = model_student.map { ["text": $0.text] }
         } catch {
             print("Parsing Error: \(error)")
         }
