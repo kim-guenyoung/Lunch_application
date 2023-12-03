@@ -18,12 +18,12 @@ class Automation_json {
 
         source = DispatchSource.makeFileSystemObjectSource(
             fileDescriptor: fileDescriptor,
-            eventMask: .write,
+            eventMask: .all, // Monitor all events
             queue: DispatchQueue.global()
         )
 
         source?.setEventHandler { [weak self] in
-            print("File changed. Do something here.")
+            print("File changed. Do something here for \(self?.fileURL.lastPathComponent ?? "").")
             self?.handleFileChange()
         }
 
@@ -32,7 +32,7 @@ class Automation_json {
 
     private func handleFileChange() {
         // 파일이 변경되었을 때 수행할 작업을 여기에 추가
-        print("Handling file change...")
+        print("Handling file change for \(fileURL.lastPathComponent)...")
     }
 
     func stopWatching() {
@@ -42,11 +42,20 @@ class Automation_json {
 
 // main 함수 추가
 func main() {
-    let jsonFileURL = URL(fileURLWithPath: "menu_faculty.json")
-    let automate = Automation_json(fileURL: jsonFileURL)
-    automate.startWatching()
-    
+    let jsonFileURLs = [
+        URL(fileURLWithPath: "menu_faculty.json"),
+        URL(fileURLWithPath: "menu_student.json")
+        // Add more file URLs as needed
+    ]
+
+    var automationInstances: [Automation_json] = []
+
+    for url in jsonFileURLs {
+        let automate = Automation_json(fileURL: url)
+        automate.startWatching()
+        automationInstances.append(automate)
+    }
+
     // 프로그램이 종료되지 않도록 대기
     RunLoop.current.run()
 }
-
