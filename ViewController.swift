@@ -144,6 +144,8 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         fetchingJsonArray_student()
         imgView.image = UIImage(named: "수뭉.png")
 
+        
+        
         let currentDate = Date()
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MM월 dd일 (EEE)"
