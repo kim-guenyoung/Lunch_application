@@ -26,7 +26,6 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     
     @IBOutlet var todayDate: UILabel!
 
-    
     @IBOutlet var imgView: UIImageView!
     // 교직원 식당 json파싱을 위한 코드
     var jsonArray_fac: [[String: String]] = []
@@ -43,7 +42,6 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     var lastSelectedOption: String?
     
     let options = ["라면타임 & 조식류", "단품코너", "오늘의 백반", "교직원 식당"]
-    
     func getMenuIndexForWeekday(_ weekday: Int) -> Int {
         return weekday - 2
     }
@@ -64,11 +62,15 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
                 if index < jsonArray_fac.count {
                     textView.text = jsonArray_fac[index]["text"]
                 } else {
-                    textView.text = "학식을@ 운영하지 않습니다."
+                    textView.text = "학식을 운영하지 않습니다."
                 }
             } else {
-                textView.text = "주말에는 교직원 식당을 운영하지 않습니다."
-            }
+            // alert로 띄우기
+            let alert = UIAlertController(title: "교직원 식당 운영 안내", message: "주말에는 교직원 식당을 운영하지 않습니다.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "확인", style: .default, handler: nil))
+            present(alert, animated: true, completion: nil)
+          }
+            
         case "라면타임 & 조식류":
             if weekday >= 2 && weekday <= 6{
                 let index = getMenuIndexForWeekday(weekday) + indexOffset
@@ -91,12 +93,13 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
             } else {
                 textView.text = "주말에는 단품코너를 운영하지 않습니다."
             }
+        
         case "오늘의 백반":
             print("Selected Option: \(selectedOption), Weekday: \(weekday)")
 
             if weekday == 6 {
                 textView.text = "단품 코너를 이용해주세요."
-            } else if weekday == 7 {
+            } else if weekday == 7 || weekday == 1{
                 textView.text = "주말에는 학식을 운영하지 않습니다."
             } else {
                 let index = getIndexForTodaySpecial(weekday)
@@ -104,12 +107,10 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
                 if index - 1 < jsonArray_stu.count {
                     textView.text = jsonArray_stu[index - 1]["text"]
                 } else {
-                    textView.text = "학식을 ! 운영하지 않습니다."
+                    textView.text = "학식을 운영하지 않습니다."
                 }
             }
 
-
-            
         default:
             if weekday >= 2 && weekday <= 6 {
                 let index = getMenuIndexForWeekday(weekday) + indexOffset
@@ -137,40 +138,38 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         let todaySpecialIndex = adjustedIndex + 10 // Add 10 to get the correct range [11, 14]
         return max(min(weekday + 9, 14), 11)
     }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         fetchingJsonArray()
         fetchingJsonArray_student()
+        
+        // Set up the imgView
         imgView.image = UIImage(named: "수뭉.png")
+        
+        // Bring the imgView to the front
+        imgView.bringSubviewToFront(view)
 
-        
-        
         let currentDate = Date()
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MM월 dd일 (EEE)"
         dateFormatter.locale = Locale(identifier: "ko_KR")
         let formattedDate = dateFormatter.string(from: currentDate)
 
-        todayDate.text = "오늘 날짜 : \(formattedDate)"
-        selectedDate = currentDate
-
+        
+//        todayDate.text = "오늘 날짜 : \(formattedDate)"
+//        todayDate.text = "선택된 날짜: \(dateFormatter.string(from: selectedDate!))"
+            
         pickerView.selectRow(0, inComponent: 0, animated: true)
         lastSelectedOption = options[0]
-        if let path = Bundle.main.path(forResource: "menu_faculty", ofType: "json") {
-            do {
-                let jsonData = try Data(contentsOf: URL(fileURLWithPath: path))
-                if let parsedArray = try JSONSerialization.jsonObject(with: jsonData, options: []) as? [[String: String]] {
-                    jsonArray_fac = parsedArray
-                }
-            } catch {
-                print("Error reading or parsing JSON file: \(error)")
-            }
-        }
+
+        // Load JSON data for faculty menu
         pickerView.delegate = self
         pickerView.dataSource = self
         displayTextForSelectedOption(lastSelectedOption!)
     }
+
 
     func fetchingJsonArray() {
         guard let fileLocation = Bundle.main.url(forResource: "menu_faculty", withExtension: "json") else {
