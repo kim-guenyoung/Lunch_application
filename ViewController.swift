@@ -25,9 +25,10 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     
     
     @IBOutlet var todayDate: UILabel!
-
+    
     @IBOutlet var imgView: UIImageView!
     // 교직원 식당 json파싱을 위한 코드
+    
     var jsonArray_fac: [[String: String]] = []
     var model = [FacultyArrayMenu]()
     
@@ -45,16 +46,16 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     func getMenuIndexForWeekday(_ weekday: Int) -> Int {
         return weekday - 2
     }
-
+    
     func displayTextForSelectedOption(_ selectedOption: String) {
         guard let unwrappedDate = selectedDate else {
             print("Error: selectedDate is nil.")
             return
         }
-
+        
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: unwrappedDate)
-
+        
         switch selectedOption {
         case "교직원 식당":
             if weekday >= 2 && weekday <= 6 {
@@ -65,11 +66,11 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
                     textView.text = "학식을 운영하지 않습니다."
                 }
             } else {
-            // alert로 띄우기
-            let alert = UIAlertController(title: "교직원 식당 운영 안내", message: "주말에는 교직원 식당을 운영하지 않습니다.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "확인", style: .default, handler: nil))
-            present(alert, animated: true, completion: nil)
-          }
+                // alert로 띄우기
+                let alert = UIAlertController(title: "교직원 식당 운영 안내", message: "주말에는 교직원 식당을 운영하지 않습니다.", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "확인", style: .default, handler: nil))
+                present(alert, animated: true, completion: nil)
+            }
             
         case "라면타임 & 조식류":
             if weekday >= 2 && weekday <= 6{
@@ -93,10 +94,10 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
             } else {
                 textView.text = "주말에는 단품코너를 운영하지 않습니다."
             }
-        
+            
         case "오늘의 백반":
             print("Selected Option: \(selectedOption), Weekday: \(weekday)")
-
+            
             if weekday == 6 {
                 textView.text = "단품 코너를 이용해주세요."
             } else if weekday == 7 || weekday == 1{
@@ -110,7 +111,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
                     textView.text = "학식을 운영하지 않습니다."
                 }
             }
-
+            
         default:
             if weekday >= 2 && weekday <= 6 {
                 let index = getMenuIndexForWeekday(weekday) + indexOffset
@@ -124,7 +125,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
             }
         }
     }
-
+    
     
     func getIndexForWeekday(_ weekday: Int) -> Int {
         // Ensure that the adjusted index is within the range [6, 10]
@@ -141,7 +142,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         fetchingJsonArray()
         fetchingJsonArray_student()
         
@@ -150,27 +151,34 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         
         // Bring the imgView to the front
         imgView.bringSubviewToFront(view)
-
+        
         let currentDate = Date()
+        selectedDate = currentDate
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MM월 dd일 (EEE)"
         dateFormatter.locale = Locale(identifier: "ko_KR")
         let formattedDate = dateFormatter.string(from: currentDate)
-
         
-//        todayDate.text = "오늘 날짜 : \(formattedDate)"
-//        todayDate.text = "선택된 날짜: \(dateFormatter.string(from: selectedDate!))"
-            
+        if let lastSelectedOption = lastSelectedOption {
+            displayTextForSelectedOption(lastSelectedOption)
+        } else {
+            // Handle the case where the user hasn't picked a restaurant yet
+            print("Please select a restaurant.")
+        }
+        
+        //        todayDate.text = "오늘 날짜 : \(formattedDate)"
+        //        todayDate.text = "선택된 날짜: \(dateFormatter.string(from: selectedDate!))"
+        
         pickerView.selectRow(0, inComponent: 0, animated: true)
         lastSelectedOption = options[0]
-
+        
         // Load JSON data for faculty menu
         pickerView.delegate = self
         pickerView.dataSource = self
         displayTextForSelectedOption(lastSelectedOption!)
     }
-
-
+    
+    
     func fetchingJsonArray() {
         guard let fileLocation = Bundle.main.url(forResource: "menu_faculty", withExtension: "json") else {
             return
@@ -184,7 +192,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
             print("Parsing Error: \(error)")
         }
     }
-
+    
     func fetchingJsonArray_student() {
         guard let fileLocation = Bundle.main.url(forResource: "menu_student", withExtension: "json") else {
             return
@@ -198,25 +206,30 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
             print("Parsing Error: \(error)")
         }
     }
-
+    
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
         return 1
     }
-
+    
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
         return options.count
     }
-
+    
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
         return options[row]
     }
-
+    
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         let selectedOption = options[row]
         displayTextForSelectedOption(selectedOption)
         lastSelectedOption = selectedOption
     }
     @IBAction func datePickerValueChanged(_ sender: UIDatePicker) {
+        let calendar = Calendar.current
+        let today = calendar.component(.weekday, from: Date())
+        
+        
+        // Update the selected date
         selectedDate = sender.date
         
         // Check if lastSelectedOption is not nil before updating the menu
@@ -228,4 +241,3 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         }
     }
 }
-
