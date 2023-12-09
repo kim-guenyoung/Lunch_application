@@ -42,7 +42,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     var model_student = [StudentArrayMenu]()
     
     var selectedDate: Date?
-    
+    let highlightWords = ["돼지갈비찜", "새우"]
     let indexOffset = 0  // You may need to adjust the value based on your requirements
     
     var lastSelectedOption: String?
@@ -60,7 +60,6 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: unwrappedDate)
-        
         switch selectedOption {
         case "교직원 식당":
             if weekday >= 2 && weekday <= 6 {
@@ -72,23 +71,32 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
                 }
             } else {
                 // alert로 띄우기
-                let alert = UIAlertController(title: "교직원 식당 운영 안내", message: "주말에는 교직원 식당을 운영하지 않습니다.", preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "확인", style: .default, handler: nil))
-                present(alert, animated: true, completion: nil)
-                
-                
+                let warningAlert = UIAlertController(title: "교직원 식당", message: "주말에는 교직원 식당을 운영하지 않습니다.", preferredStyle: .alert)
+                warningAlert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+
+                // Present the warning alert after a delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    self.present(warningAlert, animated: true, completion: nil)
+                }
             }
-            
+
         case "라면타임 & 간식류":
-            if weekday >= 2 && weekday <= 6{
+            if weekday >= 2 && weekday <= 6 {
                 let index = getMenuIndexForWeekday(weekday) + indexOffset
-                if index < jsonArray_stu.count{
+                if index < jsonArray_stu.count {
                     textView.text = jsonArray_stu[index]["text"]
-                } else{
+                } else {
                     textView.text = "학식을 ! 운영하지 않습니다."
                 }
-            }else{
-                textView.text = "주말에는 라면타임 & 간식류를 운영하지 않습니다."
+            } else {
+                // alert로 띄우기
+                let warningAlert = UIAlertController(title: "라면타임 & 간식류", message: "주말에는 라면타임 & 간식류를 운영하지 않습니다.", preferredStyle: .alert)
+                warningAlert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+
+                // Present the warning alert after a delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    self.present(warningAlert, animated: true, completion: nil)
+                }
             }
         case "단품코너":
             if weekday >= 2 && weekday <= 6 {
@@ -99,42 +107,60 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
                     textView.text = "학식을 !! 운영하지 않습니다."
                 }
             } else {
-                textView.text = "주말에는 단품코너를 운영하지 않습니다."
+                // alert로 띄우기
+                let warningAlert = UIAlertController(title: "경고", message: "주말에는 단품 코너를 운영하지 않습니다.", preferredStyle: .alert)
+                warningAlert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+
+                // Present the warning alert after a delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    self.present(warningAlert, animated: true, completion: nil)
+                }
             }
-            
         case "오늘의 백반":
-            print("Selected Option: \(selectedOption), Weekday: \(weekday)")
-            
             if weekday == 6 {
                 textView.text = "단품 코너를 이용해주세요."
-            } else if weekday == 7 || weekday == 1{
-                textView.text = "주말에는 학식을 운영하지 않습니다."
-            } else {
+            } else if weekday >= 2 && weekday <= 6 {
                 let index = getIndexForTodaySpecial(weekday)
                 print("Weekday: \(weekday), Index for Today Special: \(index)")
-
                 
                 if index - 1 < jsonArray_stu.count {
                     textView.text = jsonArray_stu[index - 1]["text"]
-                } else {
-                    textView.text = "학식을 운영하지 않습니다."
+                }
+                else{
+                    let alert = UIAlertController(title: "오늘의 백반 운영 안내", message: "주말에는 오늘의 백반을 운영하지 않습니다.", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "확인", style: .default, handler: nil))
+                    present(alert, animated: true, completion: nil)
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        self.present(alert, animated: true, completion: nil)
+                    }
                 }
             }
-            
         default:
             if weekday >= 2 && weekday <= 6 {
                 let index = getMenuIndexForWeekday(weekday) + indexOffset
                 if index < jsonArray_fac.count {
                     textView.text = jsonArray_fac[index]["text"]
                 } else {
-                    textView.text = "학식을ㅋㅋ 운영하지 않습니다."
+                    // Handle the case where jsonArray_fac is empty or index is out of bounds
+                    textView.text = "학식을 운영하지 않습니다."
                 }
             } else {
-                print("주말에는 해당 옵션을 이용할 수 없습니다.")
+                // alert로 띄우기
+                let alert = UIAlertController(title: "교직원 식당 운영 안내", message: "주말에는 교직원 식당을 운영하지 않습니다.", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "확인", style: .default, handler: nil))
+                present(alert, animated: true, completion: nil)
             }
         }
+        
+        highlightWords.forEach { word in
+            if textView.text.contains(word) {
+                highlightTextInTextView(textView.text, highlightText: word)
+            }
+        }
+        
+        textView.textAlignment = .center
     }
-    
     
     func getIndexForWeekday(_ weekday: Int) -> Int {
         // Ensure that the adjusted index is within the range [6, 10]
@@ -186,12 +212,12 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         pickerView.dataSource = self
         displayTextForSelectedOption(lastSelectedOption!)
         
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(textViewTapped(_:)))
-        textView.addGestureRecognizer(tapGestureRecognizer)
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(imgViewTapped(_:)))
+        imgView.addGestureRecognizer(tapGestureRecognizer)
     }
     
     
-    @objc func textViewTapped(_ sender: UITapGestureRecognizer) {
+    @objc func imgViewTapped(_ sender: UITapGestureRecognizer) {
         guard let selectedOption = lastSelectedOption else {
             return
         }
@@ -244,14 +270,20 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     }
     func highlightTextInTextView(_ text: String, highlightText: String) {
         let attributedString = NSMutableAttributedString(string: text)
-        let range = (text as NSString).range(of: highlightText)
+        let range = (text as NSString).range(of: highlightText, options: .caseInsensitive)
         
         if range.location != NSNotFound {
             attributedString.addAttribute(.backgroundColor, value: UIColor.yellow, range: range)
         }
         
+        // Keep the existing text attributes, such as font size
+        attributedString.addAttributes([.font: textView.font as Any], range: NSRange(location: 0, length: attributedString.length))
+        
         textView.attributedText = attributedString
     }
+        
+
+    
     func fetchingJsonArray_student() {
         guard let fileLocation = Bundle.main.url(forResource: "menu_student", withExtension: "json") else {
             return
@@ -294,26 +326,17 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         // Check if the selected date is in the current week
         if let selectedDate = selectedDate, !isDateInCurrentWeek(selectedDate) {
             // Display an alert informing the user that the menu information cannot be loaded for dates outside of the current week
-            let alert = UIAlertController(title: "주의", message: "현재 주에 해당하지 않는 날짜입니다. 학식 정보를 불러올 수 없습니다.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "확인", style: .default, handler: nil))
-            
-            // Present the alert on the main thread
-            DispatchQueue.main.async {
-                UIApplication.shared.keyWindow?.rootViewController?.present(alert, animated: true, completion: nil)
+            let warningAlert = UIAlertController(title: "주의", message: "학식을 불러올 수 없습니다.", preferredStyle: .alert)
+            warningAlert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+
+            // Present the warning alert after a delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.present(warningAlert, animated: true, completion: nil)
             }
             
             
             // Display a message in the textView
             textView.text = "학식 정보를 불ㅏ러올 수 없습니다!"
-            
-            // Create and present another alert
-            let warningAlert = UIAlertController(title: "경고", message: "현재 ON 상태입니다", preferredStyle: .alert)
-            warningAlert.addAction(UIAlertAction(title: "네 알겠습니다", style: .default, handler: nil))
-            
-            // Present the warning alert on the main thread
-            DispatchQueue.main.async {
-                UIApplication.shared.keyWindow?.rootViewController?.present(warningAlert, animated: true, completion: nil)
-            }
         } else {
             // Check if lastSelectedOption is not nil before updating the menu
             if let lastSelectedOption = lastSelectedOption {
