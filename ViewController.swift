@@ -183,7 +183,8 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         
         // Set up the imgView
         imgView.image = UIImage(named: "수뭉.png")
-        
+        imgView.isUserInteractionEnabled = true // Enable user interaction
+
         // Bring the imgView to the front
         imgView.bringSubviewToFront(view)
         
@@ -214,6 +215,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(imgViewTapped(_:)))
         imgView.addGestureRecognizer(tapGestureRecognizer)
+
     }
     
     
@@ -317,6 +319,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     }
     @IBAction func datePickerValueChanged(_ sender: UIDatePicker) {
         
+        
         let calendar = Calendar.current
         let today = calendar.component(.weekday, from: Date())
         
@@ -327,16 +330,20 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
         if let selectedDate = selectedDate, !isDateInCurrentWeek(selectedDate) {
             // Display an alert informing the user that the menu information cannot be loaded for dates outside of the current week
             let warningAlert = UIAlertController(title: "주의", message: "학식을 불러올 수 없습니다.", preferredStyle: .alert)
-            warningAlert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-
+            warningAlert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
+                // Set the date picker's date back to the current date
+                sender.date = Date()
+                self.selectedDate = sender.date
+                self.displayTextForSelectedOption(self.lastSelectedOption ?? "")
+            }))
+            
             // Present the warning alert after a delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 self.present(warningAlert, animated: true, completion: nil)
             }
             
-            
             // Display a message in the textView
-            textView.text = "학식 정보를 불ㅏ러올 수 없습니다!"
+            textView.text = "학식 정보를 불러올 수 없습니다!"
         } else {
             // Check if lastSelectedOption is not nil before updating the menu
             if let lastSelectedOption = lastSelectedOption {
@@ -346,8 +353,7 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
                 print("Please select a restaurant.")
             }
         }
-        }
-
+    }
     func isDateInCurrentWeek(_ date: Date) -> Bool {
         let calendar = Calendar.current
         let currentWeek = calendar.component(.weekOfYear, from: Date())
