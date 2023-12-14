@@ -1,5 +1,3 @@
-// NextViewController.swift
-
 import UIKit
 
 class NextViewController: UIViewController {

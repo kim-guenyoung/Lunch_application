@@ -1,8 +1,8 @@
 //
 //  SceneDelegate.swift
-//  Lunch_
+//  NavigationController
 //
-//  Created by 김근영 on 11/25/23.
+//  Created by 김근영 on 12/10/23.
 //
 
 import UIKit

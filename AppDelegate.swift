@@ -1,8 +1,8 @@
 //
 //  AppDelegate.swift
-//  Lunch_
+//  NavigationController
 //
-//  Created by 김근영 on 11/25/23.
+//  Created by 김근영 on 12/10/23.
 //
 
 import UIKit
@@ -12,9 +12,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let initialViewController = storyboard.instantiateInitialViewController()
+
+
+
         return true
     }
-
     // MARK: UISceneSession Lifecycle
 
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
@@ -30,5 +34,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
 
+    
 }
 
